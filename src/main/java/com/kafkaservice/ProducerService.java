@@ -66,5 +66,7 @@ public static Properties properties = new Properties();
   
 	 public static void main(String[] args)  {
 	        // set up the producer
-	      }
+		 new ProducerService(args);
+	 }
+	 
 }
