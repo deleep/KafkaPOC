@@ -5,7 +5,6 @@ import java.io.IOException;
 public class KafkaService {
 
 	public KafkaService() {
-		// TODO Auto-generated constructor stub
 	}
 
 	
@@ -15,7 +14,7 @@ public class KafkaService {
         }
         switch (args[0]) {
             case "producer":
-                ProducerService.main(args);
+                new ProducerService(args);
                 break;
             case "consumer":
              new ConsumerService(args);
