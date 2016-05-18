@@ -2,6 +2,7 @@ package main.java.com.kafkaservice;
 
 import java.io.InputStream;
 import java.util.Properties;
+import java.io.*;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -20,48 +21,53 @@ public static Properties properties = new Properties();
 		properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 		properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 		properties.put("block.on.buffer.full", true);
+		properties.put("message.max.bytes", 200000000);
+		
 		
 		  
 	}
 	 
-	public ProducerService(String[] args) {
-		// TODO Auto-generated constructor stub
+	public String readfile(String filename){
+	
+	    try {
+	    	
+		BufferedReader reader = new BufferedReader(new FileReader ("d:/"+filename));
+	    String         line = null;
+	    StringBuilder  stringBuilder = new StringBuilder();
+	    String         ls = System.getProperty("line.separator");
 
+	        while((line = reader.readLine()) != null) {
+	            stringBuilder.append(line);
+	            
+	            stringBuilder.append(ls);
+	        }
+  
+	       // System.out.println("string ..."+ stringBuilder.toString());
+	        
+	        return stringBuilder.toString();
+	    }catch(Exception e){
+	    	e.printStackTrace();
+	    }
+	    
+	    return null;
+	}
+	public ProducerService(String[] args) {
+	
 		KafkaProducer<String, String> producer;
-       /* try (InputStream props = Resources.getResource("producer.props").openStream()) {
-            Properties properties = new Properties();
-            properties.load(props);
-            producer = new KafkaProducer<>(properties);
-        }*/
-	   producer = new KafkaProducer<>(properties);
+        producer = new KafkaProducer<>(properties);
        
 	   try {
-            for (int i = 0; i < 1000000; i++) {
-                // send lots of messages
-                producer.send(new ProducerRecord<String, String>(
-                        "fast-messages",
-                        String.format("{\"type\":\"test\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
-
-                // every so often send to a different topic
-                if (i % 1000 == 0) {
-                    producer.send(new ProducerRecord<String, String>(
-                            "fast-messages",
-                            String.format("{\"type\":\"marker\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
-                    producer.send(new ProducerRecord<String, String>(
-                            "summary-markers",
-                            String.format("{\"type\":\"other\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
-                    producer.flush();
-                    System.out.println("Sent msg number " + i);
-                }
-            }
+           // for (int i = 0; i < 50; i++) {
+               // producer.send(new ProducerRecord<String, String>( "fast-messages",properties.toString()));
+                producer.send(new ProducerRecord<String, String>( "fast-messages",readfile(args[1])));
+                System.out.printf("Send ...");
+              //  producer.wait(1000);
+            //}
         } catch (Throwable throwable) {
             System.out.printf("%s", throwable.getStackTrace());
         } finally {
             producer.close();
         }
-
-
-	  
 	}
   
 	 public static void main(String[] args)  {

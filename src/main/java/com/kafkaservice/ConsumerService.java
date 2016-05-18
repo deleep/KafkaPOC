@@ -3,7 +3,8 @@ package main.java.com.kafkaservice;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
-
+import java.util.List;
+import java.util.ArrayList;
 import org.HdrHistogram.Histogram;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -20,13 +21,18 @@ public static Properties properties = new Properties();
 		properties.put("bootstrap.servers", "54.84.108.48:9092");
 		properties.put("group.id", "test");
 		properties.put("enable.auto.commit", true);
-		
+		properties.put("auto.commit.interval.ms", 1000);
 		properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		properties.put("session.timeout.ms", 10000);
 		properties.put("fetch.min.bytes", 50000);
 		properties.put("receive.buffer.bytes", 262144);
 		properties.put("max.partition.fetch.bytes", 2097152);
+		//properties.put("message.max.bytes", 2000000);
+		properties.put("max.partition.fetch.bytes", 2000000);
+		properties.put("max.partition.fetch.bytes", 2000000);
+		
+		
 		
 		  
 	}
@@ -34,35 +40,42 @@ public static Properties properties = new Properties();
 	public ConsumerService(String[] args) {
 		try
 		{
-	    ObjectMapper mapper = new ObjectMapper();
+	  /*  ObjectMapper mapper = new ObjectMapper();
         Histogram stats = new Histogram(1, 10000000, 2);
         Histogram global = new Histogram(1, 10000000, 2);
 
-        // and the consumer
-        KafkaConsumer<String, String> consumer;
-        /*try (InputStream props = Resources.getResource("consumer.props").openStream()) {
-            Properties properties = new Properties();
-            properties.load(props);
-            if (properties.getProperty("group.id") == null) {
-                properties.setProperty("group.id", "group-" + new Random().nextInt(100000));
-            }
-            consumer = new KafkaConsumer<>(properties);
-        }*/
+*/       KafkaConsumer<String, String> consumer;
         consumer = new KafkaConsumer<>(properties);
-          
-        
         consumer.subscribe(Arrays.asList("fast-messages", "summary-markers"));
         int timeouts = 0;
-        //noinspection InfiniteLoopStatement
+        
+        //getRecords(consumer);
+        List<ConsumerRecord<String, String>> buffer = new ArrayList<>();
+ 	    
+         while (true) {
+        	 ConsumerRecords<String, String> records = consumer.poll(100);
+	         for (ConsumerRecord<String, String> record : records) {
+	        	 
+	             buffer.add(record);
+	             System.out.println("record key.."+record.key()+"   value.."+record.value());
+	         }
+	         System.out.println("List size:  "+buffer.size());
+	         buffer.clear();
+	     }
+     
+        /*
         while (true) {
             // read records with a short timeout. If we time out, we don't really care.
-            ConsumerRecords<String, String> records = consumer.poll(200);
+        	System.out.println("trying to pull");
+            ConsumerRecords<String, String> records = consumer.poll(100);
             if (records.count() == 0) {
                 timeouts++;
             } else {
                 System.out.printf("Got %d records after %d timeouts\n", records.count(), timeouts);
                 timeouts = 0;
             }
+       
+            
             for (ConsumerRecord<String, String> record : records) {
                 switch (record.topic()) {
                     case "fast-messages":
@@ -97,15 +110,34 @@ public static Properties properties = new Properties();
                     default:
                         throw new IllegalStateException("Shouldn't be possible to get message on topic " + record.topic());
                 }
-            }
-        }
-	}  
-		
-        catch(Exception e){
+            } 
+        } */
+	    
+		}  
+		catch(Exception e){
         	e.printStackTrace();
         }
 }
-
+   public void getRecords(KafkaConsumer<String, String> consumer){
+	  try{
+	   //List<ConsumerRecord<String, String>> buffer = new ArrayList<>();
+	     while (true) {
+	    	 List<ConsumerRecord<String, String>> buffer = new ArrayList<>();
+	   	  
+	         ConsumerRecords<String, String> records = consumer.poll(200);
+	         for (ConsumerRecord<String, String> record : records) {
+	        	 
+	             buffer.add(record);
+	         }
+	        // System.out.println("record key.."+record.key()+"   value.."+record.value());
+	         System.out.println("List size:"+buffer.size());
+	         buffer.clear();
+	     }
+	  }  
+		catch(Exception e){
+      	e.printStackTrace();
+      }
+   }
 	
 	public static void main(String[] args)  {
         // set up house-keeping
